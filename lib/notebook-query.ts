@@ -1,5 +1,8 @@
 import { NotebookData } from "@/types/notebook"
 
+const SUPABASE_IMAGE_BASE_URL =
+  "https://auugfeiswyapslsggsti.supabase.co/storage/v1/object/public/notebook-images"
+  
 export const NOTEBOOK_SELECT_SQL = `
   SELECT
     n.id,
@@ -121,6 +124,16 @@ function numberText(value: unknown, suffix: string, fallback = "Não cadastrado"
   return `${converted.toLocaleString("pt-BR")}${suffix}`
 }
 
+function notebookImage(codigoModelo: unknown) {
+  const codigo = text(codigoModelo, "")
+
+  if (!codigo) {
+    return "/notebook-placeholder.svg"
+  }
+
+  return `${SUPABASE_IMAGE_BASE_URL}/${codigo}.png`
+}
+
 type DbPort = {
   tipo: string | null
   quantidade: number | null
@@ -161,7 +174,7 @@ export function mapNotebookRow(row: any): NotebookData {
     id: number(row.id),
     nome: text(row.modelo || row.codigo_modelo, "Notebook sem modelo"),
     marca: text(row.marca),
-    imagem: "/notebook-placeholder.svg",
+    imagem: notebookImage(row.codigo_modelo),
     specs: {
       processador: text(row.processador),
       placaDeVideo: text(row.gpu),
