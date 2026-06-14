@@ -8,20 +8,7 @@ import {
   DialogTrigger,
   DialogDescription
 } from "@/components/ui/dialog"
-import { PortRule } from "@/types/notebook"
-import {
-  notebooksDB,
-  TODAS_MARCAS,
-  TODOS_PROCESSADORES,
-  TODAS_GPUS,
-  TODAS_RAM,
-  TODOS_ARMAZ,
-  TODOS_TAMANHOS,
-  TODAS_RESOLUCOES,
-  TODAS_FREQUENCIAS,
-  TODOS_PAINEIS,
-  TODAS_FEATURES
-} from "@/data/notebooks"
+import { NotebookData, PortRule } from "@/types/notebook"
 
 function FilterSection({ title, options, selected, onChange, renderLabel }: any) {
   if (options.length === 0) return null
@@ -58,15 +45,17 @@ export function NotebookSelectorModal({
   selectedId,
   onChange,
   color,
-  label
+  label,
+  notebooks
 }: {
   selectedId: number
   onChange: (id: number) => void
   color: string
   label: string
+  notebooks: NotebookData[]
 }) {
   const [open, setOpen] = useState(false)
-  const selectedNb = notebooksDB.find((n) => n.id === selectedId) || notebooksDB[0]
+  const selectedNb = notebooks.find((n) => n.id === selectedId) || notebooks[0]
 
   const [searchTerm, setSearchTerm] = useState("")
   const [filters, setFilters] = useState({
@@ -137,8 +126,23 @@ export function NotebookSelectorModal({
     })
   }
 
+  const filterOptions = useMemo(() => {
+    return {
+      marcas: Array.from(new Set(notebooks.map((n) => n.marca))),
+      processadores: Array.from(new Set(notebooks.map((n) => n.specs.processador))),
+      gpus: Array.from(new Set(notebooks.map((n) => n.specs.placaDeVideo))),
+      ram: Array.from(new Set(notebooks.map((n) => n.specs.ram.capacidade))),
+      armazenamento: Array.from(new Set(notebooks.map((n) => n.specs.armazenamento.capacidade))),
+      tamanhos: Array.from(new Set(notebooks.map((n) => n.specs.tela.tamanho))),
+      resolucoes: Array.from(new Set(notebooks.map((n) => n.specs.tela.resolucao))),
+      frequencias: Array.from(new Set(notebooks.map((n) => n.specs.tela.frequencia))),
+      paineis: Array.from(new Set(notebooks.map((n) => n.specs.tela.painel))),
+      features: Array.from(new Set(notebooks.flatMap((n) => n.specs.conectividade.flatMap((p) => p.features))))
+    }
+  }, [notebooks])
+
   const filteredNotebooks = useMemo(() => {
-    return notebooksDB.filter((nb) => {
+    return notebooks.filter((nb) => {
       const matchSearch =
         nb.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         nb.marca.toLowerCase().includes(searchTerm.toLowerCase())
@@ -177,7 +181,7 @@ export function NotebookSelectorModal({
         matchPortRules
       )
     })
-  }, [searchTerm, filters])
+  }, [searchTerm, filters, notebooks])
 
   const activeFilterCount = Object.values(filters).reduce((acc, curr) => acc + curr.length, 0)
 
@@ -262,31 +266,31 @@ export function NotebookSelectorModal({
 
             <FilterSection
               title="Marcas"
-              options={TODAS_MARCAS}
+              options={filterOptions.marcas}
               selected={filters.marca}
               onChange={(v: string) => toggleFilter("marca", v)}
             />
             <FilterSection
               title="Processador"
-              options={TODOS_PROCESSADORES}
+              options={filterOptions.processadores}
               selected={filters.processador}
               onChange={(v: string) => toggleFilter("processador", v)}
             />
             <FilterSection
               title="Placa de Vídeo"
-              options={TODAS_GPUS}
+              options={filterOptions.gpus}
               selected={filters.placaDeVideo}
               onChange={(v: string) => toggleFilter("placaDeVideo", v)}
             />
             <FilterSection
               title="Memória RAM"
-              options={TODAS_RAM}
+              options={filterOptions.ram}
               selected={filters.ram}
               onChange={(v: string) => toggleFilter("ram", v)}
             />
             <FilterSection
               title="Armazenamento"
-              options={TODOS_ARMAZ}
+              options={filterOptions.armazenamento}
               selected={filters.armazenamento}
               onChange={(v: string) => toggleFilter("armazenamento", v)}
             />
@@ -297,25 +301,25 @@ export function NotebookSelectorModal({
               </h4>
               <FilterSection
                 title="Tamanho"
-                options={TODOS_TAMANHOS}
+                options={filterOptions.tamanhos}
                 selected={filters.tamanhoTela}
                 onChange={(v: string) => toggleFilter("tamanhoTela", v)}
               />
               <FilterSection
                 title="Resolução"
-                options={TODAS_RESOLUCOES}
+                options={filterOptions.resolucoes}
                 selected={filters.resolucaoTela}
                 onChange={(v: string) => toggleFilter("resolucaoTela", v)}
               />
               <FilterSection
                 title="Frequência"
-                options={TODAS_FREQUENCIAS}
+                options={filterOptions.frequencias}
                 selected={filters.freqTela}
                 onChange={(v: string) => toggleFilter("freqTela", v)}
               />
               <FilterSection
                 title="Painel"
-                options={TODOS_PAINEIS}
+                options={filterOptions.paineis}
                 selected={filters.painelTela}
                 onChange={(v: string) => toggleFilter("painelTela", v)}
               />
@@ -382,7 +386,7 @@ export function NotebookSelectorModal({
                   </select>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-1">
-                  {TODAS_FEATURES.map((feat) => {
+                  {filterOptions.features.map((feat) => {
                     const isSelected = draftRule.features.includes(feat)
                     return (
                       <button

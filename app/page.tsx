@@ -26,7 +26,7 @@ import {
 
 // Importações do Base UI e Componentes
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { notebooksDB } from "@/data/notebooks"
+import { NotebookData } from "@/types/notebook"
 
 // Componentes 3D e UI Customizados
 import { CameraRig } from "@/components/3d/CameraRig"
@@ -56,14 +56,13 @@ function CompareInterface() {
   const slugNb1 = searchParams.get("nb1")
   const slugNb2 = searchParams.get("nb2")
 
-  const initialNb1 = notebooksDB.find((n) => createSlug(n.nome) === slugNb1)?.id || 1
-
-  const initialNb2 = notebooksDB.find((n) => createSlug(n.nome) === slugNb2)?.id || 4
-
   const initialMode = (searchParams.get("view") || "stacked") as "stacked" | "sideBySide" | "merged"
 
-  const [selectedId1, setSelectedId1] = useState<number>(initialNb1)
-  const [selectedId2, setSelectedId2] = useState<number>(initialNb2)
+  const [notebooks, setNotebooks] = useState<NotebookData[]>([])
+  const [selectedId1, setSelectedId1] = useState<number>(1)
+  const [selectedId2, setSelectedId2] = useState<number>(1)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const [showUI, setShowUI] = useState(true)
 
@@ -79,10 +78,52 @@ function CompareInterface() {
     camView: "top" as "perspective" | "top" | "front" | "side" | "free"
   })
 
+  const handleModeChange = useCallback((mode: "stacked" | "sideBySide" | "merged") => {
+    setViewSettings((prev) => ({ ...prev, mode, isXRay: mode === "merged" ? true : prev.isXRay }))
+  }, [])
+
+  const updateSetting = useCallback((key: keyof typeof viewSettings, value: any) => {
+    setViewSettings((prev) => ({ ...prev, [key]: value }))
+  }, [])
+
+  useEffect(() => {
+    async function loadNotebooks() {
+      try {
+        setIsLoading(true)
+        setLoadError(null)
+
+        const response = await fetch("/api/notebooks", { cache: "no-store" })
+
+        if (!response.ok) {
+          throw new Error("Erro ao buscar notebooks no banco")
+        }
+
+        const data: NotebookData[] = await response.json()
+
+        setNotebooks(data)
+
+        const initialNb1 = data.find((n) => createSlug(n.nome) === slugNb1)?.id || data[0]?.id || 1
+        const initialNb2 = data.find((n) => createSlug(n.nome) === slugNb2)?.id || data[1]?.id || data[0]?.id || 1
+
+        setSelectedId1(initialNb1)
+        setSelectedId2(initialNb2)
+      } catch (error) {
+        console.error(error)
+        setLoadError("Não foi possível carregar os notebooks do Supabase.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadNotebooks()
+  }, [slugNb1, slugNb2])
+
   // Sincroniza o Estado com o URL sempre que houver alterações
   useEffect(() => {
-    const notebook1 = notebooksDB.find((n) => n.id === selectedId1)
-    const notebook2 = notebooksDB.find((n) => n.id === selectedId2)
+    if (notebooks.length === 0) return
+
+    const notebook1 = notebooks.find((n) => n.id === selectedId1)
+    const notebook2 = notebooks.find((n) => n.id === selectedId2)
 
     if (!notebook1 || !notebook2) return
 
@@ -97,7 +138,7 @@ function CompareInterface() {
     if (`${pathname}?${searchParams.toString()}` !== newUrl) {
       router.replace(newUrl, { scroll: false })
     }
-  }, [selectedId1, selectedId2, viewSettings.mode, pathname, router, searchParams])
+  }, [notebooks, selectedId1, selectedId2, viewSettings.mode, pathname, router, searchParams])
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 700)
@@ -105,8 +146,32 @@ function CompareInterface() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const nb1 = notebooksDB.find((n) => n.id === selectedId1) || notebooksDB[0]
-  const nb2 = notebooksDB.find((n) => n.id === selectedId2) || notebooksDB[1]
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-[#09090b] text-zinc-300 flex items-center justify-center">
+        Carregando notebooks...
+      </main>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <main className="min-h-screen bg-[#09090b] text-zinc-300 flex items-center justify-center text-center px-6">
+        {loadError}
+      </main>
+    )
+  }
+
+  if (notebooks.length === 0) {
+    return (
+      <main className="min-h-screen bg-[#09090b] text-zinc-300 flex items-center justify-center text-center px-6">
+        Nenhum notebook cadastrado no banco.
+      </main>
+    )
+  }
+
+  const nb1 = notebooks.find((n) => n.id === selectedId1) || notebooks[0]
+  const nb2 = notebooks.find((n) => n.id === selectedId2) || notebooks[1] || notebooks[0]
 
   const color1 = "#3b82f6"
   const color2 = "#f97316"
@@ -144,14 +209,6 @@ function CompareInterface() {
       zOffset1 = offsetZ
     }
   }
-
-  const handleModeChange = useCallback((mode: "stacked" | "sideBySide" | "merged") => {
-    setViewSettings((prev) => ({ ...prev, mode, isXRay: mode === "merged" ? true : prev.isXRay }))
-  }, [])
-
-  const updateSetting = useCallback((key: keyof typeof viewSettings, value: any) => {
-    setViewSettings((prev) => ({ ...prev, [key]: value }))
-  }, [])
 
   const getAlignmentName = () => {
     const { alignX, alignZ } = viewSettings
@@ -477,12 +534,14 @@ function CompareInterface() {
                   selectedId={selectedId1}
                   onChange={setSelectedId1}
                   color={color1}
+                  notebooks={notebooks}
                 />
                 <NotebookSelectorModal
                   label="Notebook 2"
                   selectedId={selectedId2}
                   onChange={setSelectedId2}
                   color={color2}
+                  notebooks={notebooks}
                 />
               </div>
 
