@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CompareNotes
 
-## Getting Started
+Sistema Web de Apoio à Decisão para Comparação de Notebooks desenvolvido como Trabalho de Conclusão de Curso (TCC) do curso de Análise e Desenvolvimento de Sistemas do Instituto Federal de Sergipe (IFS).
 
-First, run the development server:
+## Sobre o Projeto
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+O CompareNotes foi desenvolvido com o objetivo de auxiliar usuários no processo de escolha e comparação de notebooks, apresentando informações técnicas de forma organizada, padronizada e visual.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+O sistema permite comparar diferentes modelos lado a lado, facilitando a análise de características como:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+* Processador
+* Placa de vídeo
+* Memória RAM
+* Armazenamento
+* Tela
+* Conectividade
+* Peso
+* Dimensões
+* Bateria
+* Fonte
+* Teclado
+* Webcam
+* Construção
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Objetivos
 
-## Learn More
+* Reduzir a sobrecarga de informações durante a escolha de notebooks.
+* Facilitar a comparação entre modelos concorrentes.
+* Apresentar dados técnicos de forma clara e padronizada.
+* Aplicar conceitos de Sistemas de Apoio à Decisão (SAD) em ambiente web.
 
-To learn more about Next.js, take a look at the following resources:
+## Tecnologias Utilizadas
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Front-end
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* Next.js
+* React
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
 
-## Deploy on Vercel
+### Visualização 3D
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* React Three Fiber
+* Three.js
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Back-end
+
+* Next.js API Routes
+
+### Banco de Dados
+
+* PostgreSQL
+* Supabase
+
+### Hospedagem
+
+* Vercel
+
+## Banco de Dados
+
+O sistema utiliza PostgreSQL hospedado no Supabase.
+
+Principais entidades:
+
+* notebook
+* especificacao
+* tela
+* dimensao
+* conectividade
+* teclado
+* webcam
+* bateria
+* fonte
+* construcao
+
+## Funcionalidades
+
+* Cadastro de notebooks no banco de dados
+* Consulta dinâmica via PostgreSQL
+* Comparação entre modelos
+* Visualização de dimensões físicas
+* Exibição padronizada de especificações técnicas
+* Interface responsiva
+
+## Autor
+
+Wagner Guilherme Alves da Silva
+
+Instituto Federal de Sergipe (IFS)
+
+Curso: Análise e Desenvolvimento de Sistemas
+
+## Licença
+
+Projeto desenvolvido para fins acadêmicos como Trabalho de Conclusão de Curso.
