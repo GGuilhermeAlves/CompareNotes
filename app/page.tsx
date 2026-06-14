@@ -147,12 +147,22 @@ function CompareInterface() {
   }, [])
 
   if (isLoading) {
-    return (
-      <main className="min-h-screen bg-[#09090b] text-zinc-300 flex items-center justify-center">
-        Carregando notebooks...
-      </main>
-    )
-  }
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-muted border-t-primary" />
+
+      <div className="text-center">
+        <h2 className="text-xl font-semibold">
+          Carregando notebooks
+        </h2>
+
+        <p className="text-sm text-muted-foreground animate-pulse">
+          Buscando informações...
+        </p>
+      </div>
+    </div>
+  )
+}
 
   if (loadError) {
     return (
